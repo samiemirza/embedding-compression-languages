@@ -184,7 +184,7 @@ The paper documents a way in which a routine engineering choice, storing embeddi
 At 2 and 1 bit per dimension, compressed multilingual embeddings lose retrieval quality unevenly: English least, low-resource languages most, in every model tested. Whether the loss is 3\% or 70\% is decided by the model's embedding geometry, not by the bit width, the dimensionality or the language of the calibration data. The float32 score margin predicts the loss per language, explains why anisotropic models collapse while isotropic ones do not, and points to the remedy that works: subtract the mean, clip the ranges, keep the query in float.
 
 \subsubsection*{Reproducibility statement}
-All embeddings are computed once and stored; every format, calibration source, transform and rescoring variant is applied in NumPy to the stored vectors, and every table and figure in this paper is produced by a script from the released per-language result files. Code, result files and scripts are at ANONYMISED-URL. Total compute: about 6 GPU-hours on a single T4 for embedding, and under one CPU-hour on a laptop for everything else.
+All embeddings are computed once and stored; every format, calibration source, transform and rescoring variant is applied in NumPy to the stored vectors, and every table and figure in this paper is produced by a script from the released per-language result files. Code, result files and scripts are at \url{https://anonymous.4open.science/r/embedding-compression-languages-23FB}. Total compute: about 6 GPU-hours on a single T4 for embedding, and under one CPU-hour on a laptop for everything else.
 
 \bibliography{main}
 \bibliographystyle{tmlr}
