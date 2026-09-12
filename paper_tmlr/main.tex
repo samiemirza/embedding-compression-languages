@@ -1,0 +1,204 @@
+\documentclass[10pt]{article}
+\usepackage{tmlr}
+% camera-ready: \usepackage[accepted]{tmlr}   preprint: \usepackage[preprint]{tmlr}
+\input{math_commands.tex}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{booktabs,longtable,graphicx,amsmath,amssymb,enumitem}
+
+\title{Compressed embeddings fail unevenly across languages:\\the score margin, not the calibration language, decides}
+
+\author{\name Anonymous \email anonymous@example.com \\
+      \addr Independent researcher}
+
+\def\month{MM}
+\def\year{YYYY}
+\def\openreview{\url{https://openreview.net/forum?id=XXXX}}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Search on phones and laptops stores each document as an embedding vector, and to save memory the vectors are stored at 8, 4, 2 or 1 bit per dimension instead of 32. The evidence that this costs little comes from English. We measure the retrieval loss of float16, float8, int8, int4, int2 and binary storage in 122 languages with identical content (Belebele) for five multilingual embedding models under 600M parameters, and repeat the protocol on a second task with 28 times larger corpora. At 8 and 4 bits nothing is lost in any language. Below that, the loss is uneven in every model: English loses least and low-resource languages most. How much is lost, however, is decided by the model rather than by the bit width: the three multilingual-E5 models lose 7--71\% of nDCG@10 under 1-bit storage, while BGE-M3 and Qwen3-Embedding lose under 5\% in any language at the same 1024 dimensions. One quantity, computable at float32 before deployment, explains this: the score margin between the relevant document and the best wrong one. It orders the languages within every model (Spearman $\rho$ from $-0.81$ to $-0.98$), explains three quarters of the variance across models and languages, and makes tokenizer fertility, script and resource class redundant. The presumed cause, calibrating the number ranges on English text, is not the cause: calibrating on other languages changes the loss by at most 3.2 points. What works is changing the estimator, not its language: percentile clipping halves the 2-bit loss, and subtracting the calibration mean before compression, one vector fitted on English, raises the margins of the E5 models fourfold and cuts their 1-bit loss from 27--71\% to under 4\% in every language group. Rescoring 100 candidates with an int8 copy of the corpus achieves less at nine times the storage. Code and per-language results are released.
+\end{abstract}
+
+\section{Introduction}
+Dense retrieval represents every document as a vector, the embedding, and answers a query by finding the documents whose vectors score highest against the query's vector. On a phone or a laptop the vectors of the whole corpus sit in memory, so they are stored at reduced precision: float16 or int8 by default, and 4, 2 or 1 bit per dimension when memory is tight \citep{shakir2024quant,yamada2021bpr}. A 1-bit vector takes a thirty-second of the space of a float32 one. Recent measurements on the MTEB benchmark \citep{muennighoff2023mteb} say this is nearly free: float8 loses under 0.3\% of retrieval quality \citep{sanchez2025storage}, and combined with dimensionality reduction embeddings compress to a fraction of a percent of their size with little loss \citep{dimquant2026}. Both measurements use English models on English data.
+
+Multilingual embedding models serve users whose languages the models handle less well than English. That raises three questions which this paper answers.
+\begin{enumerate}[nosep]
+\item Does compression cost some languages more than others?
+\item If so, is the cause the \emph{calibration data}? Integer formats need a number range per dimension, and practitioners estimate it on English text.
+\item If the calibration language is not the cause, what is, and what can be done about it?
+\end{enumerate}
+We answer them on a benchmark whose content is the same in all 122 languages, so that a difference between two languages is a difference in how the model embeds them, not a difference in the task. We then check the answers on a second task with much larger corpora, and we test the two fixes that the answers suggest.
+
+\paragraph{Findings.} Each is supported by a table or figure in the section cited.
+\begin{enumerate}[nosep]
+\item \textbf{The loss is uneven, in every model.} At 8 and 4 bits no language loses more than about 3\%. Below that, English loses least, the average language more, and low-resource languages most, in all five models and all formats. For the E5 models 98--99\% of languages lose more than English (Section~\ref{sec:uneven}).
+\item \textbf{How much is lost is a property of the model, not of the bit width or the dimensionality.} Under 1-bit storage, the E5 family loses 27--71\% (small), 8--40\% (base) and 7--38\% (large), the two numbers being English and low-resource languages; BGE-M3 and Qwen3-Embedding lose 1--4\%. E5-large has the same 1024 dimensions as the two robust models (Section~\ref{sec:model}).
+\item \textbf{The float32 score margin explains the loss.} The margin between the relevant document and the best distractor orders the languages within every model ($\rho$ from $-0.81$ to $-0.98$) and explains three quarters of the variance across models and languages. Which languages have thin margins is the same in every model ($\rho\ge0.90$ between models); how thin they are depends on how spread out the model's embedding space is. Tokenizer fertility, script and resource class are each predictive on their own but add almost nothing once the margin is known. Six languages available both in their native script and romanised show the effect without any change of content (Section~\ref{sec:margin}).
+\item \textbf{The calibration language is not the cause.} Replacing English calibration by a sample from all other languages, excluding the target, changes the loss by at most 3.2 points. Replacing the range estimator matters far more: clipping the range to percentiles halves the 2-bit loss (Section~\ref{sec:calib}).
+\item \textbf{Subtracting the mean removes most of the loss.} Centring the vectors on the calibration mean, one vector fitted on English and applied unchanged to all 122 languages, raises the E5 margins fourfold, improves their float32 quality, and cuts their 1-bit loss relative to the original float32 quality from 59\% to 4\% on average and from 71\% to 2\% on low-resource languages. Full whitening on 1388 vectors overfits (Section~\ref{sec:whiten}).
+\item \textbf{Rescoring helps less per byte.} Rescoring the top 100 binary candidates with an int8 corpus still leaves 9--13\% for E5-small, while 20 candidates suffice for the robust models (Section~\ref{sec:rescore}).
+\item \textbf{The ordering holds on larger corpora.} On a Wikipedia retrieval task with 13{,}500 documents per language the ordering of models is unchanged and the losses are equal or smaller (Section~\ref{sec:wiki}).
+\end{enumerate}
+
+\section{Background and terms}\label{sec:terms}
+This section fixes the vocabulary used in the rest of the paper.
+
+\textbf{Retrieval and nDCG@10.} A corpus holds $n$ documents with unit-norm embeddings $\vd_1,\dots,\vd_n\in\R^d$. A query with embedding $\vq$ scores every document by the dot product $s(\vq,\vd_i)=\vq^\top\vd_i$ and returns the ten highest. nDCG@10 is 1 if the relevant document is ranked first, $1/\log_2(r+1)$ if it is ranked $r\le10$, and 0 otherwise, averaged over queries. All tasks here have exactly one relevant document per query.
+
+\textbf{Compression formats.} A float32 vector uses 32 bits per dimension. \emph{float16} and \emph{float8} are shorter floating-point formats. \emph{int$b$} maps each dimension to one of $2^b$ evenly spaced levels between a lower and an upper bound $l_j,u_j$; the bounds are the \emph{range}. \emph{Binary} keeps one bit per dimension: the sign of the value, or the sign after subtracting a threshold. Every format is applied after the model has produced the float32 vector; the model itself is never changed.
+
+\textbf{Calibration.} The ranges of int$b$ and the thresholds of binary storage are estimated from a sample of embeddings, the \emph{calibration set}. The range \emph{estimator} is the rule that turns the sample into bounds: the minimum and maximum of the sample, or a pair of percentiles.
+
+\textbf{Relative loss.} For a language and a format, loss is $(\mathrm{nDCG}_{32}-\mathrm{nDCG}_{b})/\mathrm{nDCG}_{32}$ in percent, where $\mathrm{nDCG}_{32}$ is the float32 quality of the same model on the same language. A loss of 50\% means half of the retrieval quality is gone.
+
+\textbf{Margin.} For one query, the margin is the float32 score of the relevant document minus the highest score among the other documents. It is positive exactly when the relevant document is ranked first, and its size is the amount of score noise the ranking can absorb before it flips. The margin of a language is the mean over its queries.
+
+\textbf{Low-resource.} We use the 0--5 resource classes of \citet{joshi2020state}, which rank languages by the labelled and unlabelled data available for them. Classes 0--1 are called low-resource; 47 of the 122 languages fall there.
+
+\section{Related work}
+\paragraph{Embedding compression.} Product quantisation \citep{jegou2011pq} and its descendants in Faiss \citep{johnson2019faiss} compress vectors for approximate search with learned codebooks. The formats studied here are the simpler scalar ones that on-device libraries and vector databases expose directly: per-dimension integer quantisation and sign binarisation, popularised for sentence embeddings by \citet{shakir2024quant} together with a float rescoring step, and binary passage retrieval with hashing \citep{yamada2021bpr}. Matryoshka representation learning \citep{kusupati2022matryoshka} reduces the number of dimensions instead of their precision and is orthogonal to our setting. \citet{sanchez2025storage} and \citet{dimquant2026} measure scalar formats and dimensionality reduction on MTEB with English models. We extend the measurement to 122 languages and five multilingual models and ask what predicts the per-language loss.
+
+\paragraph{Quantisation and languages.} \citet{marchisio2024quantization} show that quantising the \emph{weights} of multilingual large language models degrades non-Latin-script and low-resource languages more than English, and that automatic metrics understate the damage. We study a different object, the stored embedding rather than the model, and find the same direction of inequality with an explanation that can be measured directly: the geometry of the embedding space per language.
+
+\paragraph{Anisotropy and whitening.} Contextual embeddings occupy a narrow cone of the space \citep{ethayarajh2019contextual,gao2019representation}, also in multilingual encoders \citep{rajaee2022isotropy}. Post-hoc corrections such as flow-based transforms \citep{li2020bertflow} and whitening \citep{su2021whitening} spread the space and improve semantic similarity. We connect anisotropy to compression: a narrow cone leaves small score margins, and quantisation noise flips rankings where margins are small. This makes centring and whitening natural candidates for reducing the loss, which we test.
+
+\paragraph{Tokenizer fertility.} The number of subword tokens a tokenizer needs per word or per sentence differs by language and predicts downstream quality \citep{rust2021tokenizer}. We use fertility as one of three language covariates and find that it acts through the margin.
+
+\section{Method}
+\subsection{Storage formats}
+Let $\vx\in\R^d$ be a unit-norm embedding and $\mathcal{C}\subset\R^d$ a calibration set. We evaluate, all post hoc:
+\begin{itemize}[nosep]
+\item \textbf{float16} and \textbf{float8} (E4M3): direct casts.
+\item \textbf{int$b$}, $b\in\{8,4,2\}$: $q_j=\mathrm{round}\big((x_j-l_j)/s_j\big)$ with step $s_j=(u_j-l_j)/(2^b-1)$, where $[l_j,u_j]$ is either the minimum and maximum of dimension $j$ over $\mathcal{C}$, the recipe of \citet{shakir2024quant}, or its 5th and 95th percentiles, which we call \textbf{clip}. Values outside the range are clipped to it.
+\item \textbf{binary}: $\mathrm{sign}(x_j-t_j)$ with $t_j=0$ (\textbf{sign}) or $t_j$ the mean of dimension $j$ over $\mathcal{C}$ (\textbf{centred}).
+\end{itemize}
+Scores are dot products between the dequantised corpus vector and the query. In the main results the query stays float32, the on-device situation where the corpus is stored compressed and the query is embedded at search time. The symmetric case, query compressed the same way, is in Appendix~\ref{app:sym}.
+
+\subsection{Calibration sources}\label{sec:calsources}
+Every calibrated format is run with five sources of $\mathcal{C}$, all of 1388 vectors unless stated: (a) \textbf{English}: English documents and queries; (b) \textbf{mixed}: a uniform sample over the 121 other languages, always excluding the language being evaluated; (c) \textbf{Latin-only}: the same, restricted to Latin-script languages other than the target; (d) \textbf{target, 64}: 64 target-language texts; (e) \textbf{target, all}: all 1388 target-language texts, an oracle that overlaps the evaluation set and serves as an upper bound.
+
+\subsection{Margin and covariates}
+The margin of query $q$ is $m(q)=s(\vq,\vd^+)-\max_{i\ne +}s(\vq,\vd_i)$ at float32; the margin of a language is its mean over queries. Language covariates are tokenizer \textbf{fertility} (tokens per document divided by the English count for the same documents, so a value of 2 means twice as many tokens as English), \textbf{script} (Latin or not), and the \textbf{Joshi class}. Six languages appear both in their native script and romanised (Arabic, Bengali, Hindi, Nepali, Sinhala, Urdu), which isolates the effect of script from that of language and content.
+
+\subsection{Centring and whitening}\label{sec:whitenmethod}
+If thin margins come from a narrow cone, spreading the space before compression should widen them. We fit two transforms on a calibration set and apply them to corpus and queries before quantisation, re-normalising afterwards: \textbf{centring}, $\vx\mapsto\vx-\boldsymbol{\mu}$ with $\boldsymbol{\mu}$ the calibration mean; and \textbf{ZCA whitening}, $\vx\mapsto\boldsymbol{\Sigma}^{-1/2}(\vx-\boldsymbol{\mu})$ with $\boldsymbol{\Sigma}$ the calibration covariance shrunk towards the identity ($\boldsymbol{\Sigma}\leftarrow0.9\boldsymbol{\Sigma}+0.1\,\overline{\lambda}\,\mI$, $\overline{\lambda}$ the mean eigenvalue). The transform is fitted once, on English or on the mixed sample, and applied to every language, so at deployment it costs one vector (centring) or one $d\times d$ matrix (whitening). Because a transform can change the float32 quality itself, loss is reported both relative to the float32 quality after the transform and relative to the original float32 quality.
+
+\subsection{Rescoring}\label{sec:rescoremethod}
+The standard remedy for binary retrieval is to retrieve a candidate list with the compressed corpus and rescore it with a more precise representation \citep{shakir2024quant}. We retrieve the top $k\in\{10,20,50,100\}$ candidates with the compressed corpus and the float32 query, then rescore them with the float32 query against an int8 copy of the corpus (a realistic setting: the binary index plus an int8 copy costs 9/32 of float32) or against the float32 corpus (an upper bound).
+
+\section{Experimental setup}
+\paragraph{Data.} The main task is the Belebele retrieval task of MTEB \citep{bandarkar2024belebele,enevoldsen2025mmteb}: 488 FLORES passages as corpus and 900 questions as queries, one relevant passage per question, in 122 language variants that are translations of the same content. 73 variants use the Latin script and 49 use one of 26 other scripts. Seven Arabic dialects and creoles have no Joshi class and are excluded from the covariate regression only. The second task is the multilingual Wikipedia retrieval task of MTEB: 16 languages, about 13{,}500 passages and 1{,}500 queries each, one relevant passage per query, and different content per language. Metric: nDCG@10, computed identically to \texttt{pytrec\_eval}; recall@10 and MRR@10 lead to the same conclusions and are in the released results.
+
+\paragraph{Models.} Five multilingual embedding models under 600M parameters: multilingual-e5-small (118M, $d$=384), -base (278M, 768) and -large (560M, 1024) \citep{wang2024me5}, called E5-small, -base, -large below; BGE-M3 (568M, 1024) \citep{chen2024bgem3}; and Qwen3-Embedding-0.6B (596M, 1024) \citep{zhang2025qwen3emb}. Query and document prefixes follow each model's documentation. The three 1024-dimensional models separate the effect of dimensionality from that of the model family.
+
+\paragraph{Protocol and statistics.} Embeddings are computed once in float32 (Qwen3 in float16) and every format is applied post hoc, so all conditions share the same vectors. Means are over languages, each language being one observation. Standard errors of the means over 122 languages are at most 1.7 points for binary, 0.8 for int2-clip and 0.2 for int4, and bootstrap 95\% intervals are given where a comparison could be close. Regressions use ordinary least squares with model fixed effects and standard errors clustered by language.
+
+\section{Results}
+\subsection{The loss is uneven in every model}\label{sec:uneven}
+\input{tab_drop}
+\begin{figure}[t]\centering\includegraphics[width=\textwidth]{figs/fig2_loss_by_bits.pdf}
+\caption{Relative loss by format for English, the mean over 122 languages and the mean over the 47 low-resource languages, per model. The vertical axis is symmetric-log, so both the near-zero losses at int8 and the large ones at 1 bit are visible.}\label{fig:bits}\end{figure}
+Table~\ref{tab:drop} and Figure~\ref{fig:bits} give the loss per model for English, all languages, and low-resource languages. float16 changes nDCG@10 by at most 0.5\% in any language, and float8 and int8 by at most 0.5\% on average over languages; the largest single-language losses at int8 are 1--3\% and occur on languages the model already handles poorly. int4 costs E5-small 1.9\% on average and 2.7\% on low-resource languages, E5-base 1.1\%, and the other three models at most 0.7\%.
+
+Below 4 bits the ordering English $<$ all languages $<$ low-resource holds in all five models and all formats. It is not driven by a few languages: with int2-clip, 98--99\% of the languages lose more than English for the E5 models and 80--85\% for BGE-M3 and Qwen3; with binary storage, 84--98\% and 87--91\%. The low-resource mean exceeds the all-language mean with non-overlapping bootstrap intervals for every model at binary (E5-small 70.9 [67.8, 73.9] vs.\ 58.8 [55.6, 62.0]; BGE-M3 4.1 [3.4, 4.8] vs.\ 3.2 [2.7, 3.7]). Excluding the languages on which a model fails outright at float32 (nDCG@10 $<0.3$; 2--8 per model) changes no entry of Table~\ref{tab:drop} by more than 1.5 points. Recall@10 gives the same picture (binary loss 48\%, 22\%, 20\%, 2\%, 2\% for the five models).
+
+\subsection{How much is lost is decided by the model}\label{sec:model}
+The magnitude differs by an order of magnitude between models. Under sign binarisation E5-small loses 27\% of nDCG@10 in English and 71\% on low-resource languages (Wolof, Guarani, Jingpho and romanised Sinhala 85--88\%); E5-base loses 8\% and 40\%; E5-large 7\% and 38\%; BGE-M3 1.0\% and 4.1\%; Qwen3 0.9\% and 2.6\%. The worst language for BGE-M3, romanised Urdu, loses 16\%, less than the best language for E5-small. E5-large has exactly the dimensionality of BGE-M3 and Qwen3, a higher float32 quality than Qwen3, and loses ten times more than either, so neither dimensionality nor float32 quality is what separates the models. Compressing the query as well raises every binary loss by 12--13 points for the E5 models and doubles it for BGE-M3 and Qwen3 (Appendix~\ref{app:sym}).
+
+\subsection{The float32 margin explains the loss}\label{sec:margin}
+\begin{figure}[t]\centering\includegraphics[width=\textwidth]{figs/fig1_loss_vs_margin.pdf}
+\caption{Loss per language against the language's mean float32 margin, all five models, one point per language and model; circles mark English. Within each model the relation is monotone; between models the curves differ because the margins differ.}\label{fig:margin}\end{figure}
+\input{tab_geometry}
+Figure~\ref{fig:margin} plots the loss of every language against its mean float32 margin. Within each model the relation is monotone: the Spearman correlation between margin and binary loss is $-0.95$, $-0.98$, $-0.98$, $-0.92$ and $-0.81$ for E5-small, -base, -large, BGE-M3 and Qwen3, and $-0.93$, $-0.96$, $-0.96$, $-0.77$ and $-0.66$ for int2-clip (Table~\ref{tab:geom}). Between models the curves differ because the margins differ. The E5 embeddings are anisotropic at every size: the mean cosine between two unrelated documents is 0.77--0.79, so all scores live in a narrow band and the mean English margin is 0.05--0.06. In BGE-M3 and Qwen3 the mean document cosine is 0.41 and 0.32 and the English margin 0.12 and 0.19. Quantisation adds score noise of a size set by the format; rankings flip where the margin is smaller than the noise. Low-resource languages have the smallest margins in every model: in E5-small their mean margin is negative, i.e.\ the relevant document is on average not ranked first even at float32, and any noise costs.
+
+\paragraph{Which languages are fragile is shared; how fragile is the model's.} The per-language margins of the five models agree closely (Spearman between models 0.90--0.98), and so do the per-language binary losses of the four encoder models (0.84--0.96; Qwen3, a decoder model, 0.57--0.70). The languages that a model embeds with thin margins are the same languages for every model; what the model decides is the scale.
+
+\paragraph{Binarisation does not keep more of the vector in the robust models.} The cosine between an English float32 vector and its sign vector is 0.86 for E5-small and 0.77 for BGE-M3: the sign vector is a worse approximation for BGE-M3. What differs is the margin the noise has to overcome, so the relevant quantity is the margin relative to the noise of the format.
+
+\paragraph{Covariates act through the margin.} Regressing the per-language loss on fertility, Latin script and Joshi class with model fixed effects over 575 model--language pairs gives $R^2=0.79$ for binary and $0.62$ for int2-clip. Joshi class is the strongest covariate ($-5.1$ points of binary loss per class, $p<0.001$), Latin script adds $+4.2$ points ($p=0.006$), and fertility is marginal ($p=0.07$), although fertility alone correlates with binary loss at $\rho=0.73$--$0.79$ for the encoder models (Figure~\ref{fig:fert}). The margin alone gives $R^2=0.74$ and $0.57$, and adding the three covariates to it raises $R^2$ by at most $0.06$. The covariates describe which languages a model embeds poorly; the margin measures it directly, without any metadata about the language.
+\begin{figure}[t]\centering\includegraphics[width=0.75\textwidth]{figs/fig3_loss_vs_fertility.pdf}
+\caption{Binary loss per language against tokenizer fertility (tokens relative to English for the same documents) for E5-small and BGE-M3; crosses are romanised variants. Fertility predicts the loss but with much more scatter than the margin, and the scale is again set by the model.}\label{fig:fert}\end{figure}
+
+\paragraph{Same language, two scripts.} Six languages appear in their native script and romanised. Romanising the same Arabic, Bengali, Hindi, Nepali, Sinhala or Urdu text, with identical content, drives the E5 margin from $+0.01$--$0.03$ to between $-0.001$ and $-0.02$, the int2-clip loss from 4--10\% to 19--39\%, and the binary loss from 21--47\% to 60--80\% (Table~\ref{tab:script}). Script matters, but only through what it does to the margin.
+\begin{table}[t]\centering\small
+\begin{tabular}{llrrrrrr}\toprule
+ & & \multicolumn{2}{c}{margin} & \multicolumn{2}{c}{int2-clip loss} & \multicolumn{2}{c}{binary loss} \\
+language & script & native & Latin & native & Latin & native & Latin \\ \midrule
+Arabic & Arab & 0.033 & -0.022 & 4.2 & 18.6 & 21.5 & 66.3 \\
+Bengali & Beng & 0.022 & -0.007 & 6.6 & 27.2 & 35.4 & 65.7 \\
+Hindi & Deva & 0.028 & -0.001 & 5.8 & 21.7 & 26.0 & 59.9 \\
+Nepali & Deva & 0.014 & -0.012 & 10.4 & 23.1 & 45.2 & 68.8 \\
+Sinhala & Sinh & 0.013 & -0.017 & 9.9 & 39.2 & 46.8 & 79.9 \\
+Urdu & Arab & 0.015 & -0.014 & 10.3 & 28.7 & 43.4 & 68.3 \\ \bottomrule
+\end{tabular}
+\caption{Same language in its native script and romanised (E5-small and E5-base pooled): float32 margin and loss (\%).}\label{tab:script}
+\end{table}
+
+\subsection{The calibration language does not matter; the range estimator does}\label{sec:calib}
+\input{tab_calib}
+Table~\ref{tab:calib} isolates the calibration source on the three E5 models, the ones sensitive to it; Appendix~\ref{app:calib} has all five. Replacing English calibration by the mixed sample, which never contains the evaluated language, or by Latin-script languages only, changes the loss by at most 3.2 points in any row, and in both directions. Even the in-language oracle, which has seen the evaluation vectors, recovers only about a fifth of the int2 and of the centred-binary loss. The calibration language is not what makes the difference.
+
+Two estimator choices matter more. First, clipping the range to the 5th--95th percentiles halves the mean and the low-resource int2 loss of every model (Table~\ref{tab:drop}: 29$\to$15\% for E5-small, 18$\to$9\% for E5-base, 13$\to$6\% for E5-large). The min/max range is stretched by outliers, so most of the four levels of int2 are wasted on values that never occur; this is also why 64 in-language calibration vectors give a lower min/max int2 loss than 1388 of them (10\% vs.\ 16\%), since a smaller sample has a narrower range. Second, centring each dimension before taking the sign cuts the binary loss of E5-small from 27\% to 9\% in English and from 71\% to 50\% on low-resource languages, because anisotropic embeddings share a large common component that a threshold at zero encodes identically into every vector, wasting the bit. Sixty-four target-language texts capture the in-language benefit of both fixes; 1388 add at most half a point.
+
+\subsection{Subtracting the mean removes most of the loss}\label{sec:whiten}
+\input{tab_whiten}
+\begin{figure}[t]\centering\includegraphics[width=\textwidth]{figs/fig4_centring_rescoring.pdf}
+\caption{Left: binary loss relative to the original float32 quality before and after centring on the calibration mean, per model (bars: mean over 122 languages; ticks: low-resource mean). Right: binary loss on low-resource languages after rescoring $k$ candidates with an int8 corpus.}\label{fig:fix}\end{figure}
+If the loss is caused by thin margins in a narrow cone, spreading the cone should remove it. Table~\ref{tab:whiten} and Figure~\ref{fig:fix} (left) test this directly. Subtracting the calibration mean, one $d$-dimensional vector fitted on English and applied unchanged to all 122 languages, transforms the E5 models. For E5-small the mean document cosine falls from 0.79 to 0.35, the mean margin rises from 0.010 to 0.043, the float32 quality itself improves from 0.692 to 0.735 nDCG@10, and the binary loss relative to the original float32 quality falls from 59\% to 3.9\% on average and from 71\% to 2.1\% on low-resource languages; int2-clip and int4 storage after centring are \emph{better} than the original float32 by 5 and 9 points. The same holds for E5-base and E5-large (binary loss 29$\to$2.6\% and 27$\to$1.8\%). Measured against the improved float32 baseline, the fair comparison, the residual binary loss is 11.5\%, 7.0\% and 4.8\%, down from 59\%, 29\% and 27\%. Centring changes BGE-M3 and Qwen3 by under a point, because their spaces are already spread. Centring on the mixed sample is marginally better than on English (E5-small: 0.0\% binary loss, $-7.2$\% on low-resource languages), so again the language of the calibration data is secondary.
+
+Full ZCA whitening fitted on 1388 English vectors overfits: it lowers the float32 quality of every model (E5-small 0.692$\to$0.576) and raises every loss. Fitted on the more diverse mixed sample it matches centring for E5-small, falls short of it for the larger E5 models, and still hurts BGE-M3. The common component, not the full covariance, carries the damage, and removing it is enough.
+
+This result closes the argument. The per-language inequality of Section~\ref{sec:uneven} is neither a property of the languages nor of the bit width: a translation of the embedding space by a single vector removes most of it, in every language, without any target-language data.
+
+\subsection{Rescoring a short candidate list}\label{sec:rescore}
+\input{tab_rescore}
+Table~\ref{tab:rescore} and Figure~\ref{fig:fix} (right) give the loss after retrieving $k$ candidates with the compressed index and rescoring them with the float32 query against an int8 copy of the corpus; rescoring against the float32 corpus differs by at most 0.2 points, so the int8 copy is sufficient. Note that $k=10$ already reorders the ten retrieved documents, which is why its loss is below that of Table~\ref{tab:drop}. Rescoring works, but the number of candidates it needs is again set by the model and the language. For BGE-M3 and Qwen3, 20 candidates remove the binary loss everywhere. For the E5 models the loss decays roughly geometrically in $k$, and 100 candidates still leave 9\% on average and 13\% on low-resource languages for E5-small (E5-base and -large: 2--3\%). With the int2-clip index, 50 candidates suffice for every model and language group (at most 0.8\%). In storage terms, a binary index plus an int8 copy costs 9/32 of float32, while centred binary alone costs 1/32 and, for the E5 models, loses less. Centring is the cheaper and the stronger fix, and the two combine.
+
+\subsection{A second task with larger corpora}\label{sec:wiki}
+\input{tab_wiki}
+To check that the model ordering is not a property of Belebele's small corpus, we repeat the protocol on the Wikipedia retrieval task of MTEB: 16 languages, 13{,}500 passages and 1{,}500 queries each, 28 times more passages per language (Table~\ref{tab:wiki}; the Belebele rows are restricted to the same 16 languages). The ordering is unchanged (binary: E5-small 27\%, E5-base 6\%, E5-large 3\%, BGE-M3 and Qwen3 about 1\%) and the loss on the larger corpus is equal to or smaller than on Belebele for every model and format. The margin ordering within models persists ($\rho$ from $-0.50$ to $-0.83$ for binary), weaker than on Belebele because these mostly high-resource European languages span a narrow range of margins. Per-language losses of the E5 models agree across the two tasks (Spearman 0.67--0.77 over the 16 languages); for BGE-M3 and Qwen3 the losses are within a point of zero on both tasks and their ranking is noise.
+
+\section{Recommendations}\label{sec:reco}
+For a practitioner storing multilingual embeddings on a device, the results reduce to five rules.
+\begin{enumerate}[nosep]
+\item \textbf{int8 and int4 are safe} for every model and language tested; use them without further checks.
+\item \textbf{Below 4 bits, measure the margin first.} Embed a few hundred labelled queries per language of interest at float32 and compute the mean margin. Languages with a margin below about 0.02 for E5-type models will lose heavily under 1--2 bit storage; languages with a margin above 0.1 will not.
+\item \textbf{Subtract the calibration mean before compressing}, and re-normalise. The vector can be fitted on English. For anisotropic models this alone removes most of the loss and improves float32 retrieval as well.
+\item \textbf{Clip integer ranges to percentiles} rather than using the sample minimum and maximum, and keep the query in float.
+\item \textbf{Do not expect multilingual calibration to help.} The language of the calibration text changes the loss by a few points at most; the estimator and the centring change it by tens of points.
+\end{enumerate}
+
+\section{Discussion and limitations}
+\paragraph{Why the inequality is a model property.} A low-resource language loses more because the model embeds it worse: its relevant documents sit closer to the distractors, so any noise flips more rankings. This is the same mechanism that makes English lose more in E5-small than in BGE-M3, and the same mechanism that centring acts on. Compression does not create the inequality; it exposes an inequality in margins that is invisible at float32 as long as the relevant document is still ranked first. Reporting float32 quality alone hides it, and reporting compressed quality on English alone hides it entirely.
+
+\paragraph{Limitations.} Both tasks have one relevant document per query and short passages; tasks with graded relevance or long documents may behave differently, although the margin argument applies to any noise added to scores. The larger corpus covers 16 mostly high-resource languages. We evaluate scalar formats only; product quantisation and learned codebooks have their own calibration and were not tested. Models were run at their released checkpoints without fine-tuning for compression, and a model trained with compression in mind may not show the effect. The Joshi classes date from 2020 and are missing for seven dialects. Finally, the margin threshold in Recommendation~2 is read off Figure~\ref{fig:margin} for these models and formats and should be recalibrated for others.
+
+\section{Broader impact statement}
+The paper documents a way in which a routine engineering choice, storing embeddings at low precision, degrades search quality for speakers of low-resource languages far more than for speakers of English, and shows that the degradation is invisible in the English-only evaluations that are standard practice. It also shows that a fix costing one vector removes most of the damage. We see no direct negative use. The measurement protocol requires labelled queries in each language, which exist for the 122 Belebele languages but not for most of the world's languages; for those, the margin cannot be computed and the loss cannot be verified.
+
+\section{Conclusion}
+At 2 and 1 bit per dimension, compressed multilingual embeddings lose retrieval quality unevenly: English least, low-resource languages most, in every model tested. Whether the loss is 3\% or 70\% is decided by the model's embedding geometry, not by the bit width, the dimensionality or the language of the calibration data. The float32 score margin predicts the loss per language, explains why anisotropic models collapse while isotropic ones do not, and points to the remedy that works: subtract the mean, clip the ranges, keep the query in float.
+
+\subsubsection*{Reproducibility statement}
+All embeddings are computed once and stored; every format, calibration source, transform and rescoring variant is applied in NumPy to the stored vectors, and every table and figure in this paper is produced by a script from the released per-language result files. Code, result files and scripts are at ANONYMISED-URL. Total compute: about 6 GPU-hours on a single T4 for embedding, and under one CPU-hour on a laptop for everything else.
+
+\bibliography{main}
+\bibliographystyle{tmlr}
+
+\appendix
+\section{Compressing the query as well}\label{app:sym}
+\input{tab_sym}
+Table~\ref{tab:sym} compares compressing only the corpus, the setting of the main text, with compressing the query in the same format.
+
+\section{Calibration source, all models}\label{app:calib}
+\input{tab_calib_full}
+
+\section{Per-language results}\label{app:perlang}
+Table~\ref{tab:perlang} lists, for every language, the loss under binary and int2-clip storage for each model. Per-language results for all formats, calibration sources, transforms and query modes, together with margins, fertility and geometry statistics, are in the released CSV files.
+\input{tab_perlang}
+
+\end{document}

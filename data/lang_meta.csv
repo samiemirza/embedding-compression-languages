@@ -1,0 +1,123 @@
+lang,name,script,latin,romanised,joshi_class,wiki_articles
+acm_Arab,Mesopotamian Arabic,Arab,0,0,,
+afr_Latn,Afrikaans,Latn,1,0,3,130834
+als_Latn,Tosk Albanian,Latn,1,0,1,106299
+amh_Ethi,Amharic,Ethi,0,0,2,15728
+apc_Arab,North Levantine Arabic,Arab,0,0,,
+arb_Arab,Standard Arabic,Arab,0,0,5,1332071
+arb_Latn,Arabic (romanised),Latn,1,1,5,1332071
+ars_Arab,Najdi Arabic,Arab,0,0,,
+ary_Arab,Moroccan Arabic,Arab,0,0,,20358
+arz_Arab,Egyptian Arabic,Arab,0,0,3,1633522
+asm_Beng,Assamese,Beng,0,0,1,25469
+azj_Latn,North Azerbaijani,Latn,1,0,1,217146
+bam_Latn,Bambara,Latn,1,0,1,930
+ben_Beng,Bengali,Beng,0,0,3,191281
+ben_Latn,Bengali (romanised),Latn,1,1,3,191281
+bod_Tibt,Tibetan,Tibt,0,0,1,8113
+bul_Cyrl,Bulgarian,Cyrl,0,0,3,312041
+cat_Latn,Catalan,Latn,1,0,4,803678
+ceb_Latn,Cebuano,Latn,1,0,3,6115721
+ces_Latn,Czech,Latn,1,0,4,598237
+ckb_Arab,Central Kurdish,Arab,0,0,1,84338
+dan_Latn,Danish,Latn,1,0,3,315847
+deu_Latn,German,Latn,1,0,5,3150596
+ell_Grek,Greek,Grek,0,0,3,272786
+eng_Latn,English,Latn,1,0,5,7238177
+est_Latn,Estonian,Latn,1,0,3,261758
+eus_Latn,Basque,Latn,1,0,4,495164
+fin_Latn,Finnish,Latn,1,0,4,624625
+fra_Latn,French,Latn,1,0,5,2779016
+fuv_Latn,Nigerian Fulfulde,Latn,1,0,0,21450
+gaz_Latn,West Central Oromo,Latn,1,0,1,1971
+grn_Latn,Guarani,Latn,1,0,1,6035
+guj_Gujr,Gujarati,Gujr,0,0,1,30911
+hat_Latn,Haitian Creole,Latn,1,0,2,72093
+hau_Latn,Hausa,Latn,1,0,2,111357
+heb_Hebr,Hebrew,Hebr,0,0,3,404643
+hin_Deva,Hindi,Deva,0,0,4,171382
+hin_Latn,Hindi (romanised),Latn,1,1,4,171382
+hrv_Latn,Croatian,Latn,1,0,4,235351
+hun_Latn,Hungarian,Latn,1,0,4,573702
+hye_Armn,Armenian,Armn,0,0,1,331657
+ibo_Latn,Igbo,Latn,1,0,1,48471
+ilo_Latn,Ilocano,Latn,1,0,1,15528
+ind_Latn,Indonesian,Latn,1,0,3,795460
+isl_Latn,Icelandic,Latn,1,0,2,60448
+ita_Latn,Italian,Latn,1,0,4,1986295
+jav_Latn,Javanese,Latn,1,0,1,75516
+jpn_Jpan,Japanese,Jpan,0,0,5,1517692
+kac_Latn,Jingpho,Latn,1,0,0,
+kan_Knda,Kannada,Knda,0,0,1,34532
+kat_Geor,Georgian,Geor,0,0,3,198861
+kaz_Cyrl,Kazakh,Cyrl,0,0,3,245102
+kea_Latn,Kabuverdianu,Latn,1,0,,
+khk_Cyrl,Halh Mongolian,Cyrl,0,0,1,28250
+khm_Khmr,Khmer,Khmr,0,0,1,12866
+kin_Latn,Kinyarwanda,Latn,1,0,1,9907
+kir_Cyrl,Kyrgyz,Cyrl,0,0,1,76541
+kor_Hang,Korean,Hang,0,0,4,762284
+lao_Laoo,Lao,Laoo,0,0,2,5602
+lin_Latn,Lingala,Latn,1,0,1,5257
+lit_Latn,Lithuanian,Latn,1,0,3,226759
+lug_Latn,Ganda,Latn,1,0,1,5811
+luo_Latn,Luo,Latn,1,0,,
+lvs_Latn,Standard Latvian,Latn,1,0,3,145632
+mal_Mlym,Malayalam,Mlym,0,0,1,88940
+mar_Deva,Marathi,Deva,0,0,2,103012
+mkd_Cyrl,Macedonian,Cyrl,0,0,1,164084
+mlt_Latn,Maltese,Latn,1,0,2,7981
+mri_Latn,Maori,Latn,1,0,1,8067
+mya_Mymr,Burmese,Mymr,0,0,1,112246
+nld_Latn,Dutch,Latn,1,0,4,2226550
+nob_Latn,Norwegian Bokmal,Latn,1,0,1,690430
+npi_Deva,Nepali,Deva,0,0,1,30056
+npi_Latn,Nepali (romanised),Latn,1,1,1,30056
+nso_Latn,Northern Sotho,Latn,1,0,1,9022
+nya_Latn,Nyanja,Latn,1,0,1,1148
+ory_Orya,Odia,Orya,0,0,1,21044
+pan_Guru,Eastern Panjabi,Guru,0,0,,59712
+pbt_Arab,Southern Pashto,Arab,0,0,1,21351
+pes_Arab,Western Persian,Arab,0,0,4,1089723
+plt_Latn,Plateau Malagasy,Latn,1,0,1,103810
+pol_Latn,Polish,Latn,1,0,4,1707369
+por_Latn,Portuguese,Latn,1,0,4,1182025
+ron_Latn,Romanian,Latn,1,0,3,548784
+rus_Cyrl,Russian,Cyrl,0,0,4,2117232
+shn_Mymr,Shan,Mymr,0,0,0,38421
+sin_Latn,Sinhala (romanised),Latn,1,1,0,25674
+sin_Sinh,Sinhala,Sinh,0,0,0,25674
+slk_Latn,Slovak,Latn,1,0,3,261280
+slv_Latn,Slovenian,Latn,1,0,3,198983
+sna_Latn,Shona,Latn,1,0,1,11816
+snd_Arab,Sindhi,Arab,0,0,1,22244
+som_Latn,Somali,Latn,1,0,1,13766
+sot_Latn,Southern Sotho,Latn,1,0,1,2105
+spa_Latn,Spanish,Latn,1,0,5,2136605
+srp_Cyrl,Serbian,Cyrl,0,0,4,708525
+ssw_Latn,Swati,Latn,1,0,1,1176
+sun_Latn,Sundanese,Latn,1,0,1,62970
+swe_Latn,Swedish,Latn,1,0,4,2628181
+swh_Latn,Swahili,Latn,1,0,2,126527
+tam_Taml,Tamil,Taml,0,0,3,190179
+tel_Telu,Telugu,Telu,0,0,1,128588
+tgk_Cyrl,Tajik,Cyrl,0,0,1,118952
+tgl_Latn,Tagalog,Latn,1,0,3,49400
+tha_Thai,Thai,Thai,0,0,3,187541
+tir_Ethi,Tigrinya,Ethi,0,0,2,366
+tsn_Latn,Tswana,Latn,1,0,2,5624
+tso_Latn,Tsonga,Latn,1,0,1,1163
+tur_Latn,Turkish,Latn,1,0,4,700110
+ukr_Cyrl,Ukrainian,Cyrl,0,0,3,1433972
+urd_Arab,Urdu,Arab,0,0,3,690088
+urd_Latn,Urdu (romanised),Latn,1,1,3,690088
+uzn_Latn,Northern Uzbek,Latn,1,0,3,360523
+vie_Latn,Vietnamese,Latn,1,0,4,1304161
+war_Latn,Waray,Latn,1,0,1,1266964
+wol_Latn,Wolof,Latn,1,0,2,1741
+xho_Latn,Xhosa,Latn,1,0,2,2544
+yor_Latn,Yoruba,Latn,1,0,2,40507
+zho_Hans,Chinese (Simplified),Hans,0,0,5,1555091
+zho_Hant,Chinese (Traditional),Hant,0,0,5,1555091
+zsm_Latn,Standard Malay,Latn,1,0,3,443523
+zul_Latn,Zulu,Latn,1,0,2,12642

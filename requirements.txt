@@ -1,0 +1,9 @@
+torch
+sentence-transformers
+mteb
+datasets
+numpy
+pandas
+scipy
+statsmodels
+matplotlib

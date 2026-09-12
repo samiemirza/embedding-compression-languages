@@ -1,0 +1,43 @@
+\begin{table}[t]\centering\footnotesize
+\begin{tabular}{lllrrrrr}
+\toprule
+model & scheme & languages & English & mixed (LOO) & Latin-only & target, 64 & target, all \\
+\midrule
+E5-small & int2 & all & 29.3 & 29.9 & 28.2 & 14.4 & 23.7 \\
+ &  & low-res. & 37.9 & 38.2 & 35.9 & 18.0 & 29.1 \\
+ & int2-clip & all & 15.0 & 13.4 & 13.9 & 11.8 & 11.2 \\
+ &  & low-res. & 19.4 & 17.5 & 18.3 & 15.2 & 14.8 \\
+ & bin-centred & all & 41.7 & 39.9 & 40.0 & 34.8 & 34.6 \\
+ &  & low-res. & 50.1 & 47.6 & 47.6 & 42.7 & 42.7 \\
+\midrule
+E5-base & int2 & all & 17.8 & 18.3 & 18.4 & 8.4 & 14.0 \\
+ &  & low-res. & 24.6 & 25.5 & 25.6 & 11.6 & 18.8 \\
+ & int2-clip & all & 9.1 & 8.8 & 8.6 & 6.6 & 6.2 \\
+ &  & low-res. & 12.8 & 12.4 & 12.0 & 8.9 & 8.4 \\
+ & bin-centred & all & 26.7 & 24.2 & 24.0 & 20.2 & 20.2 \\
+ &  & low-res. & 35.7 & 31.9 & 31.4 & 26.2 & 26.1 \\
+\midrule
+E5-large & int2 & all & 13.3 & 13.5 & 13.1 & 5.8 & 9.9 \\
+ &  & low-res. & 19.4 & 19.4 & 18.8 & 8.2 & 13.8 \\
+ & int2-clip & all & 6.4 & 6.2 & 6.0 & 4.7 & 4.2 \\
+ &  & low-res. & 9.6 & 9.1 & 8.9 & 7.1 & 6.2 \\
+ & bin-centred & all & 21.5 & 19.5 & 19.4 & 15.2 & 15.2 \\
+ &  & low-res. & 29.9 & 27.3 & 27.2 & 21.5 & 21.4 \\
+\midrule
+BGE-M3 & int2 & all & 2.7 & 2.8 & 2.7 & 1.5 & 2.6 \\
+ &  & low-res. & 3.5 & 3.7 & 3.4 & 2.0 & 3.4 \\
+ & int2-clip & all & 1.1 & 1.2 & 1.2 & 1.4 & 1.3 \\
+ &  & low-res. & 1.3 & 1.4 & 1.4 & 1.9 & 1.6 \\
+ & bin-centred & all & 4.0 & 3.9 & 4.0 & 4.1 & 4.1 \\
+ &  & low-res. & 4.8 & 4.8 & 4.8 & 5.3 & 5.3 \\
+\midrule
+Qwen3-0.6B & int2 & all & 2.3 & 2.4 & 2.3 & 1.2 & 2.2 \\
+ &  & low-res. & 2.8 & 3.2 & 3.0 & 1.5 & 2.8 \\
+ & int2-clip & all & 1.1 & 1.1 & 1.2 & 1.4 & 1.3 \\
+ &  & low-res. & 1.4 & 1.5 & 1.6 & 1.9 & 1.8 \\
+ & bin-centred & all & 3.8 & 3.9 & 3.9 & 4.3 & 4.3 \\
+ &  & low-res. & 4.9 & 5.1 & 5.3 & 5.8 & 5.7 \\
+\bottomrule
+\end{tabular}
+\caption{Loss (\%) by calibration source for every model (1388 vectors except ``target, 64''; LOO = leave-target-language-out).}\label{tab:calib_full}
+\end{table}
