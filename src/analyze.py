@@ -1,7 +1,7 @@
-"""Analysis for the ESANN paper (margin framing).
+"""Analysis for the paper (margin framing).
 
 Inputs : results/<model>.csv, embeddings/<model>/fertility.csv, data/lang_meta.csv
-Outputs: results/summary_*.csv, paper/tab*.tex, paper/fig*.pdf/png
+Outputs: results/summary_*.csv, paper_tmlr/tab*.tex, paper_tmlr/figs/fig*.pdf/png
 """
 from __future__ import annotations
 import glob, os
@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 FIGDIR = os.environ.get("FIGDIR", "paper_tmlr/figs")
 os.makedirs(FIGDIR, exist_ok=True)
 MODELS = ["me5-small", "me5-base", "me5-large", "bge-m3", "qwen3-0.6b"]
-_PFX = os.environ.get("MODEL_LABEL_PREFIX", "E5")   # "mE5" for the ESANN version
+_PFX = os.environ.get("MODEL_LABEL_PREFIX", "E5")   # label prefix of the E5 models in tables and figures
 NICE = {"me5-small": f"{_PFX}-small", "me5-base": f"{_PFX}-base", "me5-large": f"{_PFX}-large", "bge-m3": "BGE-M3", "qwen3-0.6b": "Qwen3-0.6B"}
 meta = pd.read_csv("data/lang_meta.csv")
 
