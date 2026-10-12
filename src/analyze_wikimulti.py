@@ -13,7 +13,7 @@ from data import WIKI_CODE
 
 MODELS = ["me5-small", "me5-base", "me5-large", "bge-m3", "qwen3-0.6b"]
 _PFX = os.environ.get("MODEL_LABEL_PREFIX", "E5")
-TABDIR = os.environ.get("TABDIR", "paper_tmlr")
+TABDIR = os.environ.get("TABDIR", "build"); os.makedirs(TABDIR, exist_ok=True)
 NICE = {"me5-small": f"{_PFX}-small", "me5-base": f"{_PFX}-base", "me5-large": f"{_PFX}-large", "bge-m3": "BGE-M3", "qwen3-0.6b": "Qwen3-0.6B"}
 meta = pd.read_csv("data/lang_meta.csv")
 codes = list(WIKI_CODE.values())

@@ -6,7 +6,7 @@ def nz(v, nd=1):
 import os
 import pandas as pd, numpy as np
 from scipy.stats import spearmanr
-TABDIR = os.environ.get("TABDIR", "paper_tmlr")
+TABDIR = os.environ.get("TABDIR", "build"); os.makedirs(TABDIR, exist_ok=True)
 _PFX = os.environ.get("MODEL_LABEL_PREFIX", "E5")
 MODELS = ["me5-small", "me5-base", "me5-large", "bge-m3", "qwen3-0.6b"]
 NICE = {"me5-small": f"{_PFX}-small", "me5-base": f"{_PFX}-base", "me5-large": f"{_PFX}-large", "bge-m3": "BGE-M3", "qwen3-0.6b": "Qwen3-0.6B"}

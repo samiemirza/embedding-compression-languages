@@ -1,0 +1,14 @@
+\begin{table}[t]\centering\footnotesize
+\setlength{\tabcolsep}{2pt}\begin{tabular}{lrrrrrrr}
+\toprule
+model & $d$ & nDCG & $\bar{c}$ & $\mu_{\mathrm{eng}}$ & $\mu_{\mathrm{low}}$ & $\rho_{\mathrm{bin}}$ & $\rho_{\mathrm{int2}}$ \\
+\midrule
+E5-small & 384 & 0.692 & 0.79 & 0.046 & -0.002 & -0.95 & -0.93 \\
+E5-base & 768 & 0.736 & 0.78 & 0.050 & 0.003 & -0.98 & -0.96 \\
+E5-large & 1024 & 0.785 & 0.77 & 0.056 & 0.008 & -0.98 & -0.96 \\
+BGE-M3 & 1024 & 0.805 & 0.41 & 0.121 & 0.038 & -0.92 & -0.77 \\
+Qwen3-0.6B & 1024 & 0.708 & 0.32 & 0.190 & 0.012 & -0.81 & -0.66 \\
+\bottomrule
+\end{tabular}
+\caption{Embedding geometry per model. nDCG: float32 nDCG@10; $\bar{c}$: mean cosine between passages (mean over languages); $\mu$: mean float32 margin for English and for low-resource languages; $\rho$: Spearman correlation across the 122 languages between margin and loss under binarization / int2-clip.}\label{tab:geom}
+\end{table}

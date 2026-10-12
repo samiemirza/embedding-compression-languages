@@ -1,23 +1,23 @@
 # Compressed embeddings fail unevenly across languages
 
-Code, results and manuscript for *Compressed embeddings fail unevenly across languages: the score margin, not the calibration language, decides* (under review).
+Code, results and manuscript for *Compressed Embeddings Fail Unevenly Across Languages: Embedding Geometry, Not the Calibration Language, Decides* (under review).
 
-The study measures what post-hoc compression of stored text embeddings (float16, float8, int8, int4, int2, binary) costs retrieval quality in 122 languages with identical content, for five multilingual embedding models, and explains the loss with a single float32 quantity: the score margin between the relevant document and the best distractor.
+The study measures what post-hoc compression of stored text embeddings (float16, float8, int8, int4, int2, binary) costs retrieval quality in 122 languages with identical content, for five multilingual embedding models, and relates the loss to two float32 statistics: the score margin between the relevant document and the best distractor (within a model) and the anisotropy of the embedding space (across models).
 
 ## Main results
 
-- At 8 and 4 bits nothing is lost in any language. Below that, English loses least and low-resource languages most, in every model.
-- How much is lost is set by the model, not the bit width or the dimensionality: the multilingual-E5 models lose 7-71% of nDCG@10 under 1-bit storage, BGE-M3 and Qwen3-Embedding under 5% at the same 1024 dimensions.
-- The float32 margin orders the languages within every model (Spearman -0.81 to -0.98) and explains three quarters of the variance across models and languages.
-- The calibration language is not the cause (at most 3.2 points). Percentile-clipped ranges halve the 2-bit loss, and subtracting the calibration mean before compression removes most of the E5 loss in every language.
+- At 8 and 4 bits the average loss is under 2% in every model. Below that, English loses least and low-resource languages most, in every model.
+- How much is lost depends on the model: under 1-bit storage, language groups lose 7-71% of nDCG@10 with the multilingual-E5 models but under 5% with BGE-M3 and Qwen3-Embedding, even at the same 1024 dimensions.
+- The float32 margin orders the languages within every model (Spearman -0.81 to -0.98); across models the loss grows with anisotropy.
+- The calibration language is not the cause (group losses change by at most about 4 points). Percentile-clipped ranges halve the 2-bit loss, and subtracting one English mean vector from documents *and* queries removes most of the E5 loss in every language group, more than product quantization at equal storage.
 
 ## Repository layout
 
 ```
 src/                 pipeline (see below)
 results/             per-language results as CSV (everything in the paper is computed from these)
-paper_tmlr/          manuscript (main.tex), generated tables (tab_*.tex) and figures (figs/)
-cloud/               scripts to compute the embeddings on a GPU machine
+paper_acl/           manuscript (main.tex, ACL format), tables (tab_*.tex) and figures (figs/)
+cloud/               scripts to compute the embeddings (and the equal-storage experiments) on a GPU machine
 data/lang_meta.csv   per-language metadata: script, Joshi et al. (2020) resource class, Wikipedia size
 data/lang2tax.txt    resource classes from Joshi et al. (2020), https://microsoft.github.io/linguisticdiversity/
 run_all.sh           the full pipeline in order
@@ -30,12 +30,14 @@ run_all.sh           the full pipeline in order
 | `data.py` | loads the two MTEB tasks (BelebeleRetrieval, WikipediaRetrievalMultilingual) into corpus / queries / relevance labels |
 | `models.py` | the five models and their query/document prefixes |
 | `embed.py` | computes float32 embeddings once per model, task and language and stores them as `.npz` |
-| `quant.py` | the storage formats: float16, float8, int8/int4/int2 with min-max or percentile ranges, binary with zero or centred threshold |
+| `quant.py` | the storage formats: float16, float8, int8/int4/int2 with min-max or percentile ranges, binary with zero or mean threshold |
 | `metrics.py` | nDCG@10, recall@10, MRR@10 (identical to pytrec_eval for one relevant document per query) |
 | `evaluate.py` | applies every format x calibration source x query mode to the stored embeddings; writes `results/<task>_<model>.csv` |
-| `whiten_rescore.py` | centring / ZCA whitening before compression, and top-k rescoring with an int8 corpus |
-| `analyze.py`, `analyze_wikimulti.py` | statistics, regressions and figures |
-| `make_draft_tables.py`, `make_tmlr_tables.py`, `make_wr_tables.py` | every table in the manuscript |
+| `whiten_rescore.py` | centering / ZCA whitening before compression, and top-k rescoring with an int8 corpus |
+| `extra_experiments.py` | product quantization and PCA at equal storage, centering sample size, centering on the Wikipedia task; writes `results/extra_<task>_<model>.csv` (needs re-computed embeddings) |
+| `analyze.py`, `analyze_wikimulti.py` | statistics, regressions and figures (`analyze.py` also needs the embeddings for tokenizer fertility) |
+| `make_draft_tables.py`, `make_appendix_tables.py`, `make_wr_tables.py` | LaTeX tables, written to `build/`; the copies in `paper_acl/` were then laid out for two columns |
+| `make_naacl_tables.py`, `make_naacl_figs.py` | the equal-storage table and Figures 1-3, written to `paper_acl/` from the result files |
 | `lang_meta.py` | builds `data/lang_meta.csv` |
 
 ## Reproducing the paper
@@ -49,11 +51,12 @@ Requirements: Python 3.12, `pip install -r requirements.txt` (torch, sentence-tr
    bash cloud/run_cloud_me5large.sh   # multilingual-e5-large on both tasks
    python src/embed.py --task belebele --model me5-small   # e5-small and e5-base run on a laptop
    python src/embed.py --task belebele --model me5-base
+   bash cloud/run_cloud_naacl.sh      # re-embeds and runs src/extra_experiments.py (equal-storage comparison, centering sample size, Wikipedia centering)
    ```
    Datasets are downloaded from the Hugging Face Hub (`mteb/belebele`, `mteb/WikipediaRetrievalMultilingual`) at pinned revisions.
 2. **Evaluation and analysis** (laptop, minutes): the remaining steps of `run_all.sh`.
 
-Steps 2 onward can be run without step 1 from the released `results/` files: `analyze.py`, `analyze_wikimulti.py` and the `make_*_tables.py` scripts read only `results/*.csv` and `data/lang_meta.csv`.
+Steps 2 onward can be run without step 1 from the released `results/` files: `analyze_wikimulti.py`, the `make_*` scripts and `make_naacl_figs.py` read only `results/*.csv` and `data/lang_meta.csv`.
 
 ## Result files
 
@@ -64,7 +67,7 @@ Steps 2 onward can be run without step 1 from the released `results/` files: `an
 - float32 geometry per language: `margin_mean`, `margin_p25`, `doc_cos_mean`, `doc_cos_std`, `dim_var_cv`
 - `clip_frac` (fraction of values outside the calibration range, integer formats)
 
-`results/all_results_merged.csv` joins these with the language metadata and tokenizer fertility. `results/whitening.csv` and `results/rescoring.csv` hold the centring/whitening and rescoring experiments. `results/summary_*.csv` are the aggregated tables.
+`results/all_results_merged.csv` joins these with the language metadata and tokenizer fertility. `results/whitening.csv` and `results/rescoring.csv` hold the centering/whitening and rescoring experiments; `results/extra_<task>_<model>.csv` hold the equal-storage, centering sample-size and Wikipedia centering experiments (one row per language x method x budget x calibration; `extra_belebele_me5-small_mac.csv` is a cross-check run on different hardware). `results/summary_*.csv` are the aggregated tables.
 
 ## Data and model sources
 

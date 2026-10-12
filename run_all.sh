@@ -14,9 +14,12 @@ for m in $MODELS; do
 done
 python src/whiten_rescore.py
 # 3. analysis: statistics, figures
-python src/analyze.py            # -> results/summary_*.csv, paper_tmlr/figs/fig1-3
-python src/analyze_wikimulti.py  # -> results/summary_wikimulti.csv, paper_tmlr/tab_wiki.tex
+python src/analyze.py            # -> results/summary_*.csv, build/tab*.tex, build/figs/fig1-3
+python src/analyze_wikimulti.py  # -> results/summary_wikimulti.csv, build/tab_wiki.tex
+python src/extra_experiments.py --task belebele --model me5-small   # per model and task; see cloud/run_cloud_naacl.sh
 # 4. tables for the manuscript
-python src/make_draft_tables.py  # -> paper_tmlr/tab_drop.tex, tab_geometry.tex, tab_calib.tex
-python src/make_tmlr_tables.py   # -> paper_tmlr/tab_perlang.tex, tab_sym.tex, tab_calib_full.tex
-python src/make_wr_tables.py     # -> paper_tmlr/tab_whiten.tex, tab_rescore.tex, figs/fig4
+python src/make_draft_tables.py  # -> build/tab_drop.tex, tab_geometry.tex, tab_calib.tex
+python src/make_appendix_tables.py  # -> build/tab_perlang.tex, tab_sym.tex, tab_calib_full.tex
+python src/make_wr_tables.py     # -> build/tab_whiten.tex, tab_rescore.tex, build/figs/fig4
+python src/make_naacl_tables.py  # -> paper_acl/tab_matched.tex
+python src/make_naacl_figs.py    # -> paper_acl/figs/fig1-3

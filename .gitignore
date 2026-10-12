@@ -10,8 +10,12 @@ data/wikimulti_raw/
 data/wikistats_raw.csv
 cloud/*.tgz
 paper/*.pdf
-paper_tmlr/*.pdf
-paper_tmlr/sample_main.tex
+build/
+paper_acl/*.pdf
+paper_acl/*.log
+paper_acl/*.blg
+paper_acl/*.bbl
+paper_acl/*.aux
 .DS_Store
 paper/
 run_embed.sh
@@ -20,3 +24,5 @@ run_eval_watch.sh
 run_finish_tonight.sh
 cloud/local_notes/
 *.png
+cloud/*.ipynb
+paper_tmlr/

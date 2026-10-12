@@ -1,7 +1,7 @@
-\begin{table}[t]\centering\footnotesize
+\begin{table*}[t]\centering\footnotesize
 \begin{tabular}{llrrrrrr}
 \toprule
-model & languages & int8 & int4 & int2 & int2-clip & bin-sign & bin-centred \\
+model & languages & int8 & int4 & int2 & int2-clip & bin-sign & bin-mean-thr \\
 \midrule
 E5-small & English & 0.0 & 0.5 & 6.6 & 2.5 & 27.1 & 9.4 \\
  & all 122 & 0.2 & 1.9 & 29.3 & 15.0 & 58.8 & 41.7 \\
@@ -20,5 +20,5 @@ Qwen3-0.6B & English & 0.1 & 0.0 & 0.6 & 0.5 & 0.9 & 1.0 \\
  & low-res. & 0.0 & 0.1 & 2.8 & 1.4 & 2.6 & 4.9 \\
 \bottomrule
 \end{tabular}
-\caption{Relative nDCG@10 loss (\%) w.r.t.\ float32. Corpus compressed, query float32; integer ranges and binarisation thresholds calibrated on English. low-res.\ = 47 languages of Joshi class 0--1.}\label{tab:drop}
-\end{table}
+\caption{Relative nDCG@10 loss (\%) w.r.t.\ float32. Corpus compressed, query float32; integer ranges and mean thresholds (bin-mean-thr) calibrated on English; bin-mean-thr leaves the query unchanged and is not the centering transform of \S\ref{sec:whiten}. low-res.\ = 47 languages of Joshi class 0--1.}\label{tab:drop}
+\end{table*}

@@ -17,7 +17,10 @@ HF_REV = "979a211276faa22f671e69d096634193567cfd05"
 
 @lru_cache(maxsize=1)
 def all_languages() -> list[str]:
-    """The 122 monolingual subsets of MTEB BelebeleRetrieval."""
+    """The 122 monolingual subsets of MTEB BelebeleRetrieval (from the shipped data if present, else from mteb)."""
+    local = os.path.join(BELEBELE_RAW, "data")
+    if os.path.isdir(local) and len(os.listdir(local)) >= 122:
+        return sorted(f[:-6] for f in os.listdir(local) if f.endswith(".jsonl"))
     import mteb
     langs = mteb.get_task("BelebeleRetrieval").metadata.eval_langs
     return sorted(k.split("-")[0] for k in langs if k.split("-")[0] == k.split("-")[1])

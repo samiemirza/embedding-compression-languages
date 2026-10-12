@@ -1,4 +1,4 @@
-\begin{table}[t]\centering\footnotesize
+\begin{table*}[t]\centering\footnotesize
 \begin{tabular}{llrrrrrrrrrrrr}
 \toprule
 model & index & \multicolumn{3}{c}{$k=10$} & \multicolumn{3}{c}{$k=20$} & \multicolumn{3}{c}{$k=50$} & \multicolumn{3}{c}{$k=100$} \\
@@ -17,4 +17,4 @@ Qwen3-0.6B & binary & 0.1 & 0.6 & 0.8 & 0.1 & 0.1 & 0.1 & 0.1 & 0.0 & 0.0 & 0.1 
 \bottomrule
 \end{tabular}
 \caption{Loss (\%) after retrieving $k$ candidates with the compressed index and rescoring them with the float32 query against an int8 corpus. Rescoring with the float32 corpus differs by at most 0.2 points. English calibration.}\label{tab:rescore}
-\end{table}
+\end{table*}

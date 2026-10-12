@@ -1,0 +1,16 @@
+\begin{table*}[t]\centering\footnotesize
+\begin{tabular}{lrrrrrrrrrr}
+\toprule
+ & \multicolumn{2}{c}{sign} & \multicolumn{2}{c}{centered sign} & \multicolumn{2}{c}{PQ} & \multicolumn{2}{c}{centered PQ} & \multicolumn{2}{c}{PCA + int8} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7} \cmidrule(lr){8-9} \cmidrule(lr){10-11}
+model & all & low & all & low & all & low & all & low & all & low \\
+\midrule
+E5-small & 58.8 & 70.9 & 3.9 & 2.1 & 38.6 & 46.5 & 5.5 & 4.6 & 29.7 & 30.1 \\
+E5-base & 29.2 & 40.2 & 2.6 & 3.0 & 23.0 & 30.9 & 2.3 & 2.1 & 9.7 & 9.7 \\
+E5-large & 26.8 & 38.4 & 1.8 & 2.1 & 16.3 & 23.2 & 1.9 & 2.1 & 5.5 & 6.1 \\
+BGE-M3 & 3.2 & 4.1 & 1.9 & 2.6 & 3.1 & 4.0 & 1.9 & 2.5 & 8.4 & 11.1 \\
+Qwen3-0.6B & 2.0 & 2.6 & 0.6 & 0.7 & 2.5 & 3.3 & 0.9 & 1.0 & 8.6 & 11.1 \\
+\bottomrule
+\end{tabular}
+\caption{Loss (\%) relative to the original float32 nDCG@10 at the storage of 1 bit per dimension ($d/8$ bytes per vector): sign binarization, sign after the centering transform (documents and queries), product quantization with $d/8$ 8-bit sub-quantizers (PQ), PQ after centering, and PCA to $d/8$ dimensions stored at int8. All fitted on 1388 English vectors; query float32. Computed on re-embedded vectors (Appendix~\ref{app:repro}).}\label{tab:matched}
+\end{table*}

@@ -2,8 +2,9 @@ def nz(v, nd=1):
     v = round(float(v), nd)
     return 0.0 if v == 0 else v
 
-"""Extra LaTeX tables for the TMLR version: per-language appendix, symmetric-vs-asymmetric, full calibration."""
-import pandas as pd, numpy as np
+"""Appendix tables: per-language results, compressed vs float32 query, calibration source for every model (written to $TABDIR, default build/)."""
+import os, pandas as pd, numpy as np
+TABDIR = os.environ.get("TABDIR", "build"); os.makedirs(TABDIR, exist_ok=True)
 MODELS = ["me5-small", "me5-base", "me5-large", "bge-m3", "qwen3-0.6b"]
 NICE = {"me5-small": "E5-small", "me5-base": "E5-base", "me5-large": "E5-large", "bge-m3": "BGE-M3", "qwen3-0.6b": "Qwen3-0.6B"}
 df = pd.read_csv("results/all_results_merged.csv", low_memory=False)
@@ -24,7 +25,7 @@ for lang in sorted(bl.index):
     j = meta.loc[lang, "joshi_class"]; j = "--" if pd.isna(j) else str(int(j))
     L.append(f"{esc(meta.loc[lang,'name'])} & {meta.loc[lang,'script']} & {j} & " + " & ".join(f"{nz(bl.loc[lang,m],0):.0f} & {nz(i2.loc[lang,m],0):.0f}" for m in MODELS) + " \\\\")
 L += ["\\end{longtable}", "\\end{small}"]
-open("paper_tmlr/tab_perlang.tex", "w").write("\n".join(L))
+open(f"{TABDIR}/tab_perlang.tex", "w").write("\n".join(L))
 
 # B. symmetric vs asymmetric
 rows = []
@@ -38,7 +39,7 @@ for m in MODELS:
 t = pd.DataFrame(rows)
 hdr = "model & " + " & ".join(f"\\multicolumn{{2}}{{c}}{{{l}}}" for l in ["int4", "int2-clip", "binary"]) + " \\\\\n & " + " & ".join(["query fp32 & query compressed"] * 3) + " \\\\"
 body = "\n".join(f"{r.model} & " + " & ".join(f"{nz(r[c]):.1f}" for c in t.columns[1:]) + " \\\\" for _, r in t.iterrows())
-open("paper_tmlr/tab_sym.tex", "w").write("\\begin{table}[t]\\centering\\footnotesize\n\\begin{tabular}{lrrrrrr}\n\\toprule\n" + hdr + "\n\\midrule\n" + body + "\n\\bottomrule\n\\end{tabular}\n\\caption{Mean relative loss (\\%) over 122 languages when only the corpus is compressed (query float32) versus when the query is compressed the same way.}\\label{tab:sym}\n\\end{table}\n")
+open(f"{TABDIR}/tab_sym.tex", "w").write("\\begin{table}[t]\\centering\\footnotesize\n\\begin{tabular}{lrrrrrr}\n\\toprule\n" + hdr + "\n\\midrule\n" + body + "\n\\bottomrule\n\\end{tabular}\n\\caption{Mean relative loss (\\%) over 122 languages when only the corpus is compressed (query float32) versus when the query is compressed the same way.}\\label{tab:sym}\n\\end{table}\n")
 
 # C. full calibration table per model, low-resource and all
 CAL = [("english", "English"), ("mixed", "mixed (LOO)"), ("mixed_lat", "Latin-only"), ("target64", "target, 64"), ("target", "target, all")]
@@ -51,5 +52,5 @@ for m in MODELS:
     L.append("\\midrule")
 L[-1] = "\\bottomrule"
 L += ["\\end{tabular}", "\\caption{Loss (\\%) by calibration source for every model (1388 vectors except ``target, 64''; LOO = leave-target-language-out).}\\label{tab:calib_full}", "\\end{table}"]
-open("paper_tmlr/tab_calib_full.tex", "w").write("\n".join(L))
-print("wrote paper_tmlr/tab_perlang.tex, tab_sym.tex, tab_calib_full.tex")
+open(f"{TABDIR}/tab_calib_full.tex", "w").write("\n".join(L))
+print("wrote", TABDIR + "/tab_perlang.tex, tab_sym.tex, tab_calib_full.tex")

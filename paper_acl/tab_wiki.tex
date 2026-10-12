@@ -1,7 +1,7 @@
-\begin{table}[t]\centering\footnotesize
+\begin{table*}[t]\centering\footnotesize
 \begin{tabular}{llrrrrrrr}
 \toprule
-model & task & nDCG & margin & int2-clip & bin-sign & bin-centred & $\rho_{\mathrm{bin}}$ \\
+model & task & nDCG & margin & int2-clip & bin-sign & bin-mean-thr & $\rho_{\mathrm{bin}}$ \\
 \midrule
 E5-small & Wikipedia & 0.877 & 0.025 & 3.4 & 27.1 & 18.8 & -0.54 \\
  & Belebele & 0.906 & 0.034 & 5.5 & 33.9 & 23.1 & -0.86 \\
@@ -15,5 +15,5 @@ Qwen3-0.6B & Wikipedia & 0.868 & 0.082 & 0.4 & 1.0 & 1.4 & -0.67 \\
  & Belebele & 0.899 & 0.134 & 0.6 & 1.1 & 2.0 & -0.60 \\
 \bottomrule
 \end{tabular}
-\caption{Wikipedia (13.5k passages per language) vs.\ Belebele, same 16 languages: mean loss (\%); $\rho$ = Spearman(margin, binary loss).}\label{tab:wiki}
-\end{table}
+\caption{Wikipedia (13.5k passages per language) vs.\ Belebele, same 16 languages: mean loss (\%) with English calibration; bin-mean-thr = binary with thresholds at the calibration mean, query unchanged (not the centering transform); $\rho$ = Spearman(margin, binary loss).}\label{tab:wiki}
+\end{table*}

@@ -1,6 +1,6 @@
 \begin{small}
 \begin{longtable}{llrrrrrrrrrrr}
-\caption{Per-language float32 margin ($\mu$) and relative loss (\%) under binarisation (bin) and int2-clip (int2) for every model; J = Joshi class.}\label{tab:perlang}\\
+\caption{Per-language relative loss (\%) under binarization (bin) and int2-clip (int2) for every model; J = Joshi class.}\label{tab:perlang}\\
 \toprule
 language & script & J & \multicolumn{2}{c}{E5-small} & \multicolumn{2}{c}{E5-base} & \multicolumn{2}{c}{E5-large} & \multicolumn{2}{c}{BGE-M3} & \multicolumn{2}{c}{Qwen3-0.6B} \\
  & & & bin & int2 & bin & int2 & bin & int2 & bin & int2 & bin & int2 \\
@@ -19,7 +19,7 @@ Tosk Albanian & Latn & 1 & 59 & 14 & 27 & 7 & 17 & 3 & 2 & 0 & 2 & 1 \\
 Amharic & Ethi & 2 & 69 & 22 & 36 & 11 & 36 & 7 & 3 & 1 & 4 & 2 \\
 North Levantine Arabic & Arab & -- & 51 & 10 & 16 & 4 & 18 & 3 & 2 & 1 & 0 & 0 \\
 Standard Arabic & Arab & 5 & 31 & 5 & 12 & 3 & 6 & 2 & 1 & 0 & 1 & 0 \\
-Arabic (romanised) & Latn & 5 & 82 & 21 & 50 & 16 & 65 & 14 & 13 & 3 & 3 & 1 \\
+Arabic (romanized) & Latn & 5 & 82 & 21 & 50 & 16 & 65 & 14 & 13 & 3 & 3 & 1 \\
 Najdi Arabic & Arab & -- & 39 & 9 & 17 & 4 & 10 & 2 & 3 & 1 & 1 & 1 \\
 Moroccan Arabic & Arab & -- & 62 & 22 & 30 & 7 & 39 & 7 & 4 & 2 & 2 & 1 \\
 Egyptian Arabic & Arab & 3 & 46 & 11 & 25 & 6 & 20 & 4 & 2 & 0 & 1 & 0 \\
@@ -27,7 +27,7 @@ Assamese & Beng & 1 & 70 & 21 & 39 & 9 & 35 & 8 & 3 & 2 & 3 & 1 \\
 North Azerbaijani & Latn & 1 & 68 & 11 & 27 & 7 & 25 & 5 & 2 & 0 & 1 & 1 \\
 Bambara & Latn & 1 & 80 & 19 & 45 & 13 & 47 & 15 & 6 & 2 & 1 & 1 \\
 Bengali & Beng & 3 & 54 & 8 & 17 & 5 & 19 & 4 & 2 & 1 & 2 & 1 \\
-Bengali (romanised) & Latn & 3 & 78 & 35 & 54 & 19 & 50 & 15 & 9 & 2 & 3 & 2 \\
+Bengali (romanized) & Latn & 3 & 78 & 35 & 54 & 19 & 50 & 15 & 9 & 2 & 3 & 2 \\
 Tibetan & Tibt & 1 & 52 & 14 & 66 & 15 & 52 & 16 & 5 & 2 & 6 & 5 \\
 Bulgarian & Cyrl & 3 & 30 & 6 & 10 & 3 & 7 & 2 & 2 & 0 & 1 & 1 \\
 Catalan & Latn & 4 & 40 & 7 & 13 & 2 & 7 & 2 & 1 & 0 & 1 & 0 \\
@@ -50,7 +50,7 @@ Haitian Creole & Latn & 2 & 79 & 21 & 45 & 14 & 47 & 8 & 3 & 2 & 3 & 2 \\
 Hausa & Latn & 2 & 77 & 19 & 34 & 12 & 35 & 12 & 4 & 1 & 3 & 2 \\
 Hebrew & Hebr & 3 & 37 & 7 & 15 & 5 & 8 & 2 & 1 & 0 & 2 & 1 \\
 Hindi & Deva & 4 & 37 & 7 & 15 & 5 & 11 & 2 & 2 & 1 & 1 & 0 \\
-Hindi (romanised) & Latn & 4 & 76 & 25 & 44 & 19 & 47 & 13 & 8 & 2 & 1 & 2 \\
+Hindi (romanized) & Latn & 4 & 76 & 25 & 44 & 19 & 47 & 13 & 8 & 2 & 1 & 2 \\
 Croatian & Latn & 4 & 56 & 9 & 12 & 4 & 9 & 2 & 1 & 1 & 2 & 0 \\
 Hungarian & Latn & 4 & 39 & 8 & 11 & 2 & 6 & 1 & 1 & 1 & 1 & 0 \\
 Armenian & Armn & 1 & 70 & 22 & 37 & 16 & 40 & 9 & 3 & 1 & 2 & 2 \\
@@ -86,7 +86,7 @@ Burmese & Mymr & 1 & 77 & 25 & 37 & 13 & 33 & 8 & 4 & 1 & 1 & 1 \\
 Dutch & Latn & 4 & 28 & 5 & 11 & 2 & 6 & 1 & 1 & 0 & 1 & 0 \\
 Norwegian Bokmal & Latn & 1 & 31 & 4 & 11 & 3 & 6 & 2 & 1 & 0 & 1 & 1 \\
 Nepali & Deva & 1 & 62 & 13 & 28 & 8 & 21 & 5 & 2 & 1 & 3 & 1 \\
-Nepali (romanised) & Latn & 1 & 83 & 23 & 55 & 24 & 61 & 16 & 12 & 4 & 3 & 2 \\
+Nepali (romanized) & Latn & 1 & 83 & 23 & 55 & 24 & 61 & 16 & 12 & 4 & 3 & 2 \\
 Northern Sotho & Latn & 1 & 79 & 18 & 47 & 14 & 42 & 13 & 5 & 2 & 1 & 0 \\
 Nyanja & Latn & 1 & 72 & 23 & 42 & 11 & 42 & 10 & 5 & 1 & 3 & 2 \\
 Odia & Orya & 1 & 65 & 14 & 27 & 8 & 21 & 3 & 3 & 1 & 2 & 2 \\
@@ -99,7 +99,7 @@ Portuguese & Latn & 4 & 49 & 9 & 15 & 4 & 10 & 3 & 1 & 1 & 1 & 0 \\
 Romanian & Latn & 3 & 31 & 5 & 8 & 2 & 6 & 1 & 1 & 1 & 1 & 0 \\
 Russian & Cyrl & 4 & 27 & 5 & 8 & 2 & 6 & 1 & 1 & 1 & 0 & 0 \\
 Shan & Mymr & 0 & 82 & 39 & 49 & 19 & 57 & 20 & 2 & 0 & 3 & -1 \\
-Sinhala (romanised) & Latn & 0 & 88 & 41 & 72 & 37 & 76 & 18 & 13 & 6 & 6 & 3 \\
+Sinhala (romanized) & Latn & 0 & 88 & 41 & 72 & 37 & 76 & 18 & 13 & 6 & 6 & 3 \\
 Sinhala & Sinh & 0 & 67 & 12 & 27 & 8 & 22 & 5 & 2 & 0 & 3 & 4 \\
 Slovak & Latn & 3 & 40 & 7 & 9 & 2 & 6 & 2 & 1 & 0 & 1 & 1 \\
 Slovenian & Latn & 3 & 51 & 8 & 14 & 3 & 8 & 3 & 1 & 0 & 2 & 1 \\
@@ -124,7 +124,7 @@ Tsonga & Latn & 1 & 77 & 17 & 45 & 12 & 45 & 10 & 3 & 1 & 2 & 1 \\
 Turkish & Latn & 4 & 42 & 6 & 8 & 3 & 8 & 2 & 1 & 0 & 2 & 0 \\
 Ukrainian & Cyrl & 3 & 36 & 5 & 9 & 3 & 6 & 1 & 2 & 1 & 1 & 0 \\
 Urdu & Arab & 3 & 59 & 13 & 28 & 7 & 19 & 5 & 2 & 1 & 2 & 1 \\
-Urdu (romanised) & Latn & 3 & 78 & 34 & 58 & 23 & 65 & 16 & 16 & 6 & 2 & 2 \\
+Urdu (romanized) & Latn & 3 & 78 & 34 & 58 & 23 & 65 & 16 & 16 & 6 & 2 & 2 \\
 Northern Uzbek & Latn & 3 & 71 & 18 & 33 & 12 & 26 & 6 & 2 & 1 & 2 & 2 \\
 Vietnamese & Latn & 4 & 37 & 8 & 8 & 2 & 6 & 2 & 1 & 0 & 0 & 0 \\
 Waray & Latn & 1 & 68 & 15 & 28 & 9 & 29 & 6 & 2 & 0 & 1 & 1 \\
