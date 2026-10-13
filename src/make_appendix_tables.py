@@ -23,7 +23,7 @@ L = ["\\begin{small}", "\\begin{longtable}{llr" + "r" * (2 * len(MODELS)) + "}",
      " & & & " + " & ".join(["bin & int2"] * len(MODELS)) + " \\\\", "\\midrule", "\\endhead", "\\bottomrule", "\\endfoot"]
 for lang in sorted(bl.index):
     j = meta.loc[lang, "joshi_class"]; j = "--" if pd.isna(j) else str(int(j))
-    L.append(f"{esc(meta.loc[lang,'name'])} & {meta.loc[lang,'script']} & {j} & " + " & ".join(f"{nz(bl.loc[lang,m],0):.0f} & {nz(i2.loc[lang,m],0):.0f}" for m in MODELS) + " \\\\")
+    L.append(f"{esc(meta.loc[lang,'name']).replace('romanised','romanized')} & {meta.loc[lang,'script']} & {j} & " + " & ".join(f"{nz(bl.loc[lang,m],0):.0f} & {nz(i2.loc[lang,m],0):.0f}" for m in MODELS) + " \\\\")
 L += ["\\end{longtable}", "\\end{small}"]
 open(f"{TABDIR}/tab_perlang.tex", "w").write("\n".join(L))
 

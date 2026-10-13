@@ -1,6 +1,6 @@
 # Compressed embeddings fail unevenly across languages
 
-Code, results and manuscript for *Compressed Embeddings Fail Unevenly Across Languages: Embedding Geometry, Not the Calibration Language, Decides* (under review).
+Code, results and manuscript for *Compressed Embeddings Fail Unevenly Across Languages, and Removing the Mean Fixes Most of It* (under review).
 
 The study measures what post-hoc compression of stored text embeddings (float16, float8, int8, int4, int2, binary) costs retrieval quality in 122 languages with identical content, for five multilingual embedding models, and relates the loss to two float32 statistics: the score margin between the relevant document and the best distractor (within a model) and the anisotropy of the embedding space (across models).
 
@@ -38,6 +38,9 @@ run_all.sh           the full pipeline in order
 | `analyze.py`, `analyze_wikimulti.py` | statistics, regressions and figures (`analyze.py` also needs the embeddings for tokenizer fertility) |
 | `make_draft_tables.py`, `make_appendix_tables.py`, `make_wr_tables.py` | LaTeX tables, written to `build/`; the copies in `paper_acl/` were then laid out for two columns |
 | `make_naacl_tables.py`, `make_naacl_figs.py` | the equal-storage table and Figures 1-3, written to `paper_acl/` from the result files |
+| `mechanism.py` | score perturbation, ranking flips and graded centering on the stored E5-small embeddings; writes `results/mechanism_me5-small.csv`, `results/mechanism_queries_me5-small.csv` |
+| `heldout_calibration.py` | calibration on English Wikipedia passages (no content overlap with Belebele) and multi-seed mixed calibration, E5-small; writes `results/heldout_calibration_me5-small.csv` |
+| `make_mechanism_tables.py` | appendix tables for the two scripts above and the loss distribution (`paper_acl/tab_graded`, `tab_flip`, `tab_heldout`, `tab_dist`) |
 | `lang_meta.py` | builds `data/lang_meta.csv` |
 
 ## Reproducing the paper

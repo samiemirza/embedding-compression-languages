@@ -1,0 +1,15 @@
+\begin{table}[t]\centering\footnotesize
+\begin{tabular}{lrrrr}
+\toprule
+ & \multicolumn{2}{c}{not centered} & \multicolumn{2}{c}{centered} \\
+margin / perturb. & lost & queries & lost & queries \\
+\midrule
+$<0.25$ & 94\% & 7{,}825 & 68\% & 3{,}533 \\
+0.25--0.5 & 90\% & 7{,}816 & 60\% & 3{,}530 \\
+0.5--1 & 83\% & 14{,}683 & 47\% & 7{,}332 \\
+1--2 & 61\% & 22{,}165 & 24\% & 14{,}557 \\
+$>2$ & 21\% & 13{,}479 & 2\% & 42{,}296 \\
+\bottomrule
+\end{tabular}
+\caption{Share of queries ranked first at float32 that lose the first rank under sign binarization, by the ratio of the query's float32 margin to the perturbation of its scores (E5-small, all 122 languages pooled).}\label{tab:flip}
+\end{table}
