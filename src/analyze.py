@@ -77,7 +77,7 @@ open(f"{TABDIR}/tab1_drop.tex", "w").write(
     "scheme & bits & " + hdr + " \\\\\n & & " + sub + " \\\\\n\\midrule\n" + body +
     "\n\\bottomrule\n\\end{tabular}\n\\caption{Relative nDCG@10 loss (\\%) vs.\\ float32 for English, the mean over 122 languages, and the mean over low-resource languages (Joshi class 0--1). Corpus compressed, query float32; integer ranges calibrated on English.}\\label{tab:drop}\n\\end{table}\n")
 
-# ---------------- Table 2: model geometry explains the model gap ----------------
+# ---------------- Table 2: model geometry and the model gap ----------------
 f32 = a[a.scheme == "fp32"]
 rows = []
 for m in models:

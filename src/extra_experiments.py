@@ -1,4 +1,4 @@
-"""Experiments added before the NAACL 2027 submission, on re-computed embeddings.
+"""Equal-storage and centering experiments, on re-computed embeddings.
 
 Run per model once its embeddings exist:  python src/extra_experiments.py --task belebele --model me5-small
 

@@ -4,7 +4,7 @@ def nz(v, nd=1):
 
 """Second-task analysis: WikipediaRetrievalMultilingual (16 languages, ~13.5k passages each).
 Compares each model's loss and the margin relation with Belebele on the same 16 languages.
-Outputs results/summary_wikimulti.csv and paper/draft_tab5_wikimulti.tex"""
+Outputs results/summary_wikimulti.csv and $TABDIR/tab_wiki.tex (default build/)"""
 import glob, os
 import numpy as np, pandas as pd
 from scipy.stats import spearmanr

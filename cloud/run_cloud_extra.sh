@@ -1,9 +1,9 @@
 #!/bin/bash
-# Pre-NAACL runs (Oct 2026) on a Kaggle/Colab T4: re-embed, run src/extra_experiments.py, keep only the small result CSVs.
-# Usage from the repo root: bash cloud/run_cloud_naacl.sh   Results: $OUT (default /kaggle/working/naacl_results)
+# Equal-storage and centering runs on a Kaggle/Colab T4: re-embed, run src/extra_experiments.py, keep only the small result CSVs.
+# Usage from the repo root: bash cloud/run_cloud_extra.sh   Results: $OUT (default /kaggle/working/extra_results)
 # TEST=1 runs E5-small on a few languages of each task and skips package installs (local check before uploading).
 set -o pipefail
-OUT=${OUT:-/kaggle/working/naacl_results}; mkdir -p "$OUT"
+OUT=${OUT:-/kaggle/working/extra_results}; mkdir -p "$OUT"
 export HF_HOME=${HF_HOME:-/tmp/hf}
 if [ "$TEST" != 1 ]; then
   python -m pip install -q faiss-cpu
@@ -44,4 +44,4 @@ else
 fi
 echo "=== ALL DONE $(date)" | tee -a "$OUT/run.log"
 grep "done rc=" "$OUT/run.log"
-(cd "$OUT" && tar czf ../naacl_results.tgz .) && ls -lh "$OUT"
+(cd "$OUT" && tar czf ../extra_results.tgz .) && ls -lh "$OUT"

@@ -7,3 +7,4 @@ pandas
 scipy
 statsmodels
 matplotlib
+faiss-cpu

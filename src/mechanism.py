@@ -8,7 +8,9 @@
 
 Scores are compared after scaling compressed scores to the float32 scale per query (least squares),
 so that perturbation is measured in the units of the margin.
-Output: results/mechanism_me5-small.csv (per language x alpha)
+Also: bits shared between documents and the query-independent score offset, and centering one side only.
+Output: results/mechanism_me5-small.csv (per language x alpha), mechanism_queries_me5-small.csv,
+mechanism_bits_me5-small.csv, mechanism_onesided_me5-small.csv
 """
 import glob, os, sys
 import numpy as np, pandas as pd
@@ -67,3 +69,23 @@ for l in langs:
 q = pd.DataFrame(qrows); q.to_csv(f"results/mechanism_queries_{MODEL}.csv", index=False)
 bins = [0, 0.25, 0.5, 1, 2, np.inf]; q["bin"] = pd.cut(q.ratio, bins)
 print(q.groupby(["alpha", "bin"], observed=True).lost.agg(["mean", "size"]).round(3).to_string())
+
+# 4. Share of bits two documents have in common, and spread over documents of the query-independent offset mu'b
+#    against the query-dependent part (q-mu)'b of the score, with centered codes b = sign(d - mu).
+brows = []
+for l in langs:
+    D, Q = E[l]["docs"], E[l]["queries"]; iu = np.triu_indices(len(D), 1)
+    agree = lambda B: float((((B @ B.T)[iu] / B.shape[1] + 1) / 2).mean())
+    B0, Bc = np.where(D > 0, 1.0, -1.0), np.where(D - mu > 0, 1.0, -1.0)
+    brows.append(dict(lang=l, bits_shared_sign=agree(B0), bits_shared_centered=agree(Bc),
+                      offset_sd=float((mu @ Bc.T).std()), query_part_sd=float(((Q - mu) @ Bc.T).std(1).mean())))
+pd.DataFrame(brows).to_csv(f"results/mechanism_bits_{MODEL}.csv", index=False); print(pd.DataFrame(brows).mean(numeric_only=True).round(3).to_dict())
+
+# 5. Centering one side only, with sign codes: stored bits centered (query uncentered), query centered (bits uncentered), both.
+orows = []
+for l in langs:
+    D, Q, qr = E[l]["docs"], E[l]["queries"], E[l]["qrels"]; Qc, Dc = nrm(Q - mu), nrm(D - mu)
+    base = retrieval_metrics(Q @ D.T, qr)["ndcg_at_10"]; B0, Bc = np.where(D > 0, 1.0, -1.0), np.where(Dc > 0, 1.0, -1.0)
+    loss = lambda q, b: 100 * (base - retrieval_metrics(q @ b.T, qr)["ndcg_at_10"]) / base
+    orows.append(dict(lang=l, base_ndcg=base, loss_sign=loss(Q, B0), loss_bits_only=loss(Q, Bc), loss_query_only=loss(Qc, B0), loss_both=loss(Qc, Bc)))
+pd.DataFrame(orows).to_csv(f"results/mechanism_onesided_{MODEL}.csv", index=False); print(pd.DataFrame(orows).mean(numeric_only=True).round(2).to_dict())
